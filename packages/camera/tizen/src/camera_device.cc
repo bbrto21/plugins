@@ -827,7 +827,7 @@ void CameraDevice::Open(
     SetExposureMode(exposure_mode_);
   } catch (const CameraDeviceError &error) {
     LOG_WARN("[%s] %s", error.GetErrorCode().c_str(),
-              error.GetErrorMessage().c_str());
+             error.GetErrorMessage().c_str());
   }
 
   flutter::EncodableMap map;
