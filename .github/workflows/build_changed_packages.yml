@@ -1,0 +1,81 @@
+name: Build changed packages
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install prerequisite packages
+      - uses: jitterbit/get-changed-files@v1
+        id: files
+        with:
+          format: space-delimited
+          token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sudo apt-get install \
+          acl \
+          bridge-utils \
+          gettext \
+          openvpn \
+          libfontconfig1 \
+          libglib2.0-0 \
+          libjpeg-turbo8 \
+          libpixman-1-0 \
+          libpng16-16 \
+          libsdl1.2debian \
+          libsm6 \
+          libv4l-0 \
+          libx11-xcb1 \
+          libxcb-icccm4 \
+          libxcb-image0 \
+          libxcb-randr0 \
+          libxcb-render-util0 \
+          libxcb-shape0 \
+          libxcb-xfixes0 \
+          libxi6
+      - name: Install Tizen Studio
+        run: |
+          sudo apt install -y pciutils zip libncurses5 python libpython2.7
+          curl http://download.tizen.org/sdk/Installer/tizen-studio_4.1/web-cli_Tizen_Studio_4.1_ubuntu-64.bin -o install.bin
+          chmod a+x install.bin
+          ./install.bin --accept-license $HOME/tizen-studio
+          rm install.bin
+      - name: Install Tizen Studio packages
+        run: |
+          $HOME/tizen-studio/package-manager/package-manager-cli.bin install \
+          NativeCLI \
+          NativeToolchain-Gcc-9.2 \
+          WEARABLE-4.0-NativeAppDevelopment \
+          WEARABLE-5.5-NativeAppDevelopment
+      - name: Install flutter-tizen
+        run: |
+          git clone https://github.com/flutter-tizen/flutter-tizen.git
+      - name: Build examples of changed packages
+        run: |
+          export PATH=$PATH:`pwd`/flutter-tizen/bin
+          function list_include_item {
+            local list="$1"
+            local item="$2"
+            if [[ $list =~ (^|[[:space:]])"$item"($|[[:space:]]) ]] ; then
+              # yes, list include item
+              result=0
+            else
+              result=1
+            fi
+            return $result
+          }
+          changed_packages=()
+          for changed_file in ${{ steps.files.outputs.all }}; do
+            package=$(echo ${changed_file} | sed 's|\/tizen.*||;s|.*packages\/||')
+                if ! list_include_item $changed_packages $package; then
+                  changed_packages+=($package)
+                fi
+          done
+          for package in "${changed_packages[@]}"; do
+            cd `pwd`/${package}/example
+            flutter-tizen pub get
+            flutter-tizen build tpk --device-profile wearable -v
+          done
