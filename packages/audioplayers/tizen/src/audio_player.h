@@ -60,7 +60,7 @@ class AudioPlayer {
   static void OnInterrupted(player_interrupted_code_e code, void *data);
   static void OnErrorOccurred(int code, void *data);
 
-  player_h player_;
+  player_h player_{nullptr};
   std::string player_id_;
   bool low_latency_;
   std::string url_;

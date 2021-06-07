@@ -29,6 +29,7 @@ static std::string CreateTempFileName(const std::string &prefix,
   if (!cache_dir_path) {
     return file_name;
   }
+
   file_name.append(cache_dir_path);
   file_name.append(prefix);
   file_name.append(std::to_string(Timestamp()));
