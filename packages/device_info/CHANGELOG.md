@@ -12,3 +12,4 @@
 * Migrate to null safety
 * Add missing documentation
 * Resolve the visibility warning (`channel` is visible for testing purposes only)
+
